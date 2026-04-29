@@ -264,6 +264,7 @@ function runATS() {
 
     // Animate score
     animateScore(overall);
+    if (overall >= 75) setTimeout(launchConfetti, 600);
 
     // Update cards
     document.getElementById('kw-score').textContent = kwScore + '%';
@@ -452,9 +453,192 @@ function downloadFile(name, content, type) {
     URL.revokeObjectURL(a.href);
 }
 
-// ===== INIT: add one entry to each section =====
-document.getElementById('btn-add-exp').click();
-document.getElementById('btn-add-edu').click();
-document.getElementById('btn-add-skill').click();
-document.getElementById('btn-add-proj').click();
-document.getElementById('btn-add-cert').click();
+// ===== THEME TOGGLE =====
+const themeBtn = document.getElementById('btn-theme');
+const themeIcon = document.getElementById('icon-theme');
+function setTheme(light) {
+    document.body.classList.toggle('light', light);
+    themeIcon.innerHTML = light
+        ? '<path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>'
+        : '<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>';
+    localStorage.setItem('rf-theme', light ? 'light' : 'dark');
+}
+themeBtn.addEventListener('click', () => setTheme(!document.body.classList.contains('light')));
+if (localStorage.getItem('rf-theme') === 'light') setTheme(true);
+
+// ===== AUTO-SAVE =====
+let saveTimer = null;
+function autoSave() {
+    collect();
+    const data = { personal: state.personal, summary: state.summary, experience: state.experience, education: state.education, skills: state.skills, projects: state.projects, certifications: state.certifications, jdText: document.getElementById('jd-input').value };
+    localStorage.setItem('rf-data', JSON.stringify(data));
+    const ind = document.getElementById('save-indicator');
+    ind.classList.add('visible');
+    setTimeout(() => ind.classList.remove('visible'), 2000);
+}
+function scheduleAutoSave() { clearTimeout(saveTimer); saveTimer = setTimeout(autoSave, 1500); }
+document.addEventListener('input', scheduleAutoSave);
+
+// ===== PROGRESS BAR =====
+function updateProgress() {
+    let filled = 0, total = 10;
+    const p = state.personal || {};
+    if (p.name) filled++;
+    if (p.email) filled++;
+    if (p.phone) filled++;
+    if (p.location) filled++;
+    if (state.summary || document.getElementById('inp-summary').value) filled++;
+    if (document.getElementById('experience-list').querySelectorAll('.list-item').length > 0) {
+        const first = document.getElementById('experience-list').querySelector('[data-field="title"]');
+        if (first && first.value) filled++;
+    }
+    if (document.getElementById('education-list').querySelectorAll('.list-item').length > 0) {
+        const first = document.getElementById('education-list').querySelector('[data-field="degree"]');
+        if (first && first.value) filled++;
+    }
+    if (document.getElementById('skills-list').querySelectorAll('.list-item').length > 0) {
+        const first = document.getElementById('skills-list').querySelector('[data-field="items"]');
+        if (first && first.value) filled++;
+    }
+    if (document.getElementById('projects-list').querySelectorAll('.list-item').length > 0) {
+        const first = document.getElementById('projects-list').querySelector('[data-field="name"]');
+        if (first && first.value) filled++;
+    }
+    if (document.getElementById('jd-input').value.trim()) filled++;
+    const pct = Math.round((filled / total) * 100);
+    document.getElementById('progress-bar').style.width = pct + '%';
+}
+document.addEventListener('input', updateProgress);
+setInterval(updateProgress, 3000);
+
+// ===== CONFETTI =====
+function launchConfetti() {
+    const colors = ['#6366f1','#06b6d4','#10b981','#f59e0b','#ec4899','#ef4444','#818cf8'];
+    for (let i = 0; i < 60; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.top = -10 + 'px';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.animationDelay = Math.random() * 0.8 + 's';
+        el.style.width = (6 + Math.random() * 8) + 'px';
+        el.style.height = (6 + Math.random() * 8) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+    }
+}
+// Hook confetti into ATS — patch animateScore
+const _origAnimateScore = animateScore;
+function animateScoreWithConfetti(target) {
+    _origAnimateScore(target);
+    if (target >= 75) setTimeout(launchConfetti, 600);
+}
+// Override the runATS call
+const origRunATS = runATS;
+
+// ===== KEYBOARD SHORTCUTS =====
+document.getElementById('btn-shortcuts').addEventListener('click', () => {
+    document.getElementById('modal-shortcuts').classList.add('active');
+});
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+            case '1': e.preventDefault(); document.getElementById('nav-editor').click(); break;
+            case '2': e.preventDefault(); document.getElementById('nav-preview').click(); break;
+            case '3': e.preventDefault(); document.getElementById('nav-ats').click(); break;
+            case 's': e.preventDefault(); autoSave(); toast('Resume saved!'); break;
+            case 'd': e.preventDefault(); themeBtn.click(); break;
+            case 'l': e.preventDefault(); document.getElementById('btn-export-tex').click(); break;
+            case '/': e.preventDefault(); document.getElementById('modal-shortcuts').classList.toggle('active'); break;
+        }
+    }
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+});
+
+// ===== EXPORT JSON =====
+document.getElementById('btn-export-json').addEventListener('click', () => {
+    collect();
+    const data = { personal: state.personal, summary: state.summary, experience: state.experience, education: state.education, skills: state.skills, projects: state.projects, certifications: state.certifications };
+    downloadFile((state.personal.name || 'resume').replace(/\s+/g, '_') + '.json', JSON.stringify(data, null, 2), 'application/json');
+    toast('JSON exported!');
+});
+
+// ===== IMPORT JSON =====
+document.getElementById('btn-import-json').addEventListener('click', () => {
+    document.getElementById('modal-import').classList.add('active');
+});
+document.getElementById('btn-do-import').addEventListener('click', () => {
+    try {
+        const data = JSON.parse(document.getElementById('import-json-input').value);
+        localStorage.setItem('rf-data', JSON.stringify(data));
+        document.getElementById('modal-import').classList.remove('active');
+        toast('Resume imported! Reloading...');
+        setTimeout(() => location.reload(), 800);
+    } catch(e) { toast('Invalid JSON data', 'error'); }
+});
+
+// ===== RESTORE SAVED DATA =====
+function restoreSavedData() {
+    const saved = localStorage.getItem('rf-data');
+    if (!saved) return false;
+    try {
+        const data = JSON.parse(saved);
+        if (data.personal) {
+            if (data.personal.name) document.getElementById('inp-name').value = data.personal.name;
+            if (data.personal.email) document.getElementById('inp-email').value = data.personal.email;
+            if (data.personal.phone) document.getElementById('inp-phone').value = data.personal.phone;
+            if (data.personal.location) document.getElementById('inp-location').value = data.personal.location;
+            if (data.personal.linkedin) document.getElementById('inp-linkedin').value = data.personal.linkedin;
+            if (data.personal.github) document.getElementById('inp-github').value = data.personal.github;
+        }
+        if (data.summary) document.getElementById('inp-summary').value = data.summary;
+        if (data.jdText) document.getElementById('jd-input').value = data.jdText;
+        // Restore dynamic lists
+        function restoreList(btnId, listId, items, fields) {
+            document.getElementById(listId).innerHTML = '';
+            (items || []).forEach(item => {
+                document.getElementById(btnId).click();
+                const lastItem = document.getElementById(listId).lastElementChild;
+                fields.forEach(f => {
+                    const inp = lastItem.querySelector(`[data-field="${f}"]`);
+                    if (inp && item[f]) inp.value = item[f];
+                });
+            });
+            if (!items || !items.length) document.getElementById(btnId).click();
+        }
+        restoreList('btn-add-exp', 'experience-list', data.experience, ['title','company','start','end','bullets']);
+        restoreList('btn-add-edu', 'education-list', data.education, ['degree','school','year','gpa']);
+        restoreList('btn-add-skill', 'skills-list', data.skills, ['category','items']);
+        restoreList('btn-add-proj', 'projects-list', data.projects, ['name','tech','bullets']);
+        restoreList('btn-add-cert', 'certs-list', data.certifications, ['name','issuer','year']);
+        return true;
+    } catch(e) { return false; }
+}
+
+// ===== CHAR COUNTS =====
+function addCharCount(el, max) {
+    const counter = document.createElement('div');
+    counter.className = 'char-count';
+    el.parentNode.appendChild(counter);
+    function update() {
+        const len = el.value.length;
+        counter.textContent = len + (max ? ' / ' + max : '') + ' chars';
+        counter.classList.toggle('warn', max && len > max);
+    }
+    el.addEventListener('input', update);
+    update();
+}
+addCharCount(document.getElementById('inp-summary'), 500);
+addCharCount(document.getElementById('jd-input'), 0);
+
+// ===== INIT =====
+if (!restoreSavedData()) {
+    document.getElementById('btn-add-exp').click();
+    document.getElementById('btn-add-edu').click();
+    document.getElementById('btn-add-skill').click();
+    document.getElementById('btn-add-proj').click();
+    document.getElementById('btn-add-cert').click();
+}
+updateProgress();
