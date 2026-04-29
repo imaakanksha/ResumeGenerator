@@ -46,16 +46,34 @@
             </button>
         </nav>
         <div class="header-right">
+            <div id="save-indicator" class="save-indicator"><span class="dot"></span> Saved</div>
+            <button id="btn-import-json" class="btn btn-secondary" title="Import JSON Resume">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                <span>Import</span>
+            </button>
+            <button id="btn-export-json" class="btn btn-secondary" title="Export JSON Resume Data">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                <span>Export</span>
+            </button>
             <button id="btn-export-tex" class="btn btn-secondary" title="Export LaTeX for Overleaf">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                Export .tex
+                <span>.tex</span>
             </button>
             <button id="btn-export-pdf" class="btn btn-primary">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
-                Export PDF
+                <span>PDF</span>
+            </button>
+            <button id="btn-theme" class="theme-toggle" title="Toggle theme">
+                <svg id="icon-theme" viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+            </button>
+            <button id="btn-shortcuts" class="theme-toggle" title="Keyboard shortcuts (Ctrl+/)">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
             </button>
         </div>
     </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-container"><div id="progress-bar" class="progress-bar-fill"></div></div>
 
     <!-- Main Content -->
     <main id="main-content" class="main-content">
@@ -276,6 +294,34 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="modal-shortcuts" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="document.getElementById('modal-shortcuts').classList.remove('active')">&times;</button>
+            <h2>⌨️ Keyboard Shortcuts</h2>
+            <div class="shortcut-row"><span>Switch to Editor</span><span class="kbd">Ctrl + 1</span></div>
+            <div class="shortcut-row"><span>Switch to Preview</span><span class="kbd">Ctrl + 2</span></div>
+            <div class="shortcut-row"><span>Switch to ATS Score</span><span class="kbd">Ctrl + 3</span></div>
+            <div class="shortcut-row"><span>Export PDF</span><span class="kbd">Ctrl + P</span></div>
+            <div class="shortcut-row"><span>Export LaTeX</span><span class="kbd">Ctrl + L</span></div>
+            <div class="shortcut-row"><span>Save (manual)</span><span class="kbd">Ctrl + S</span></div>
+            <div class="shortcut-row"><span>Toggle Theme</span><span class="kbd">Ctrl + D</span></div>
+            <div class="shortcut-row"><span>Show Shortcuts</span><span class="kbd">Ctrl + /</span></div>
+        </div>
+    </div>
+
+    <!-- JSON Import Modal -->
+    <div id="modal-import" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="document.getElementById('modal-import').classList.remove('active')">&times;</button>
+            <h2>📥 Import Resume Data</h2>
+            <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:16px">Paste previously exported JSON data to restore your resume.</p>
+            <textarea id="import-json-input" style="width:100%;min-height:200px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text-primary);font-family:var(--font-mono);font-size:0.82rem;resize:vertical" placeholder='{"personal":{...},"experience":[...],...}'></textarea>
+            <button id="btn-do-import" class="btn btn-primary btn-lg" style="width:100%;margin-top:12px;justify-content:center">Import Resume</button>
+        </div>
+    </div>
+
+    <input type="file" id="file-import" accept=".json" style="display:none">
     <script src="app.js"></script>
 </body>
 </html>
