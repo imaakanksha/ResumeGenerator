@@ -28,9 +28,10 @@ document.querySelectorAll('.section-header').forEach(h => {
 function toast(msg, type = 'success') {
     const el = document.createElement('div');
     el.className = 'toast ' + type;
-    el.textContent = msg;
+    const icons = { success: '✓', error: '✗', info: 'ℹ' };
+    el.innerHTML = `<span class="toast-icon">${icons[type] || icons.success}</span><span>${msg}</span><div class="toast-progress"></div>`;
     document.getElementById('toast-container').appendChild(el);
-    setTimeout(() => el.remove(), 3000);
+    setTimeout(() => el.remove(), 3200);
 }
 
 // ===== COLLECT DATA =====
@@ -66,8 +67,10 @@ function collectList(containerId, fields) {
 
 // ===== ADD EXPERIENCE =====
 document.getElementById('btn-add-exp').addEventListener('click', () => {
-    const html = `<div class="list-item">
-        <button class="btn-remove" onclick="this.parentElement.remove()">&times;</button>
+    const html = `<div class="list-item" draggable="true">
+        <div class="drag-handle"><span></span><span></span><span></span></div>
+        <button class="btn-duplicate" title="Duplicate" onclick="duplicateItem(this)"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/></svg></button>
+        <button class="btn-remove" onclick="this.parentElement.remove();updateMetrics()">×</button>
         <div class="form-grid">
             <div class="form-group"><label>Job Title</label><input type="text" data-field="title" placeholder="Software Engineer"></div>
             <div class="form-group"><label>Company</label><input type="text" data-field="company" placeholder="Google"></div>
@@ -77,13 +80,15 @@ document.getElementById('btn-add-exp').addEventListener('click', () => {
         </div>
     </div>`;
     document.getElementById('experience-list').insertAdjacentHTML('beforeend', html);
-    applyTextareaStyle();
+    applyTextareaStyle(); initDragDrop('experience-list');
 });
 
 // ===== ADD EDUCATION =====
 document.getElementById('btn-add-edu').addEventListener('click', () => {
-    const html = `<div class="list-item">
-        <button class="btn-remove" onclick="this.parentElement.remove()">&times;</button>
+    const html = `<div class="list-item" draggable="true">
+        <div class="drag-handle"><span></span><span></span><span></span></div>
+        <button class="btn-duplicate" title="Duplicate" onclick="duplicateItem(this)"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/></svg></button>
+        <button class="btn-remove" onclick="this.parentElement.remove();updateMetrics()">&times;</button>
         <div class="form-grid">
             <div class="form-group"><label>Degree</label><input type="text" data-field="degree" placeholder="B.S. Computer Science"></div>
             <div class="form-group"><label>School</label><input type="text" data-field="school" placeholder="MIT"></div>
@@ -92,24 +97,30 @@ document.getElementById('btn-add-edu').addEventListener('click', () => {
         </div>
     </div>`;
     document.getElementById('education-list').insertAdjacentHTML('beforeend', html);
+    initDragDrop('education-list');
 });
 
 // ===== ADD SKILLS =====
 document.getElementById('btn-add-skill').addEventListener('click', () => {
-    const html = `<div class="list-item">
-        <button class="btn-remove" onclick="this.parentElement.remove()">&times;</button>
+    const html = `<div class="list-item" draggable="true">
+        <div class="drag-handle"><span></span><span></span><span></span></div>
+        <button class="btn-duplicate" title="Duplicate" onclick="duplicateItem(this)"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/></svg></button>
+        <button class="btn-remove" onclick="this.parentElement.remove();updateMetrics()">&times;</button>
         <div class="form-grid">
             <div class="form-group"><label>Category</label><input type="text" data-field="category" placeholder="Programming Languages"></div>
             <div class="form-group"><label>Skills (comma-separated)</label><input type="text" data-field="items" placeholder="Python, Java, JavaScript, Go"></div>
         </div>
     </div>`;
     document.getElementById('skills-list').insertAdjacentHTML('beforeend', html);
+    initDragDrop('skills-list');
 });
 
 // ===== ADD PROJECT =====
 document.getElementById('btn-add-proj').addEventListener('click', () => {
-    const html = `<div class="list-item">
-        <button class="btn-remove" onclick="this.parentElement.remove()">&times;</button>
+    const html = `<div class="list-item" draggable="true">
+        <div class="drag-handle"><span></span><span></span><span></span></div>
+        <button class="btn-duplicate" title="Duplicate" onclick="duplicateItem(this)"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/></svg></button>
+        <button class="btn-remove" onclick="this.parentElement.remove();updateMetrics()">&times;</button>
         <div class="form-grid">
             <div class="form-group"><label>Project Name</label><input type="text" data-field="name" placeholder="E-Commerce Platform"></div>
             <div class="form-group"><label>Technologies</label><input type="text" data-field="tech" placeholder="React, Node.js, MongoDB"></div>
@@ -117,13 +128,15 @@ document.getElementById('btn-add-proj').addEventListener('click', () => {
         </div>
     </div>`;
     document.getElementById('projects-list').insertAdjacentHTML('beforeend', html);
-    applyTextareaStyle();
+    applyTextareaStyle(); initDragDrop('projects-list');
 });
 
 // ===== ADD CERTIFICATION =====
 document.getElementById('btn-add-cert').addEventListener('click', () => {
-    const html = `<div class="list-item">
-        <button class="btn-remove" onclick="this.parentElement.remove()">&times;</button>
+    const html = `<div class="list-item" draggable="true">
+        <div class="drag-handle"><span></span><span></span><span></span></div>
+        <button class="btn-duplicate" title="Duplicate" onclick="duplicateItem(this)"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/></svg></button>
+        <button class="btn-remove" onclick="this.parentElement.remove();updateMetrics()">&times;</button>
         <div class="form-grid">
             <div class="form-group"><label>Certification Name</label><input type="text" data-field="name" placeholder="AWS Solutions Architect"></div>
             <div class="form-group"><label>Issuer</label><input type="text" data-field="issuer" placeholder="Amazon Web Services"></div>
@@ -131,6 +144,7 @@ document.getElementById('btn-add-cert').addEventListener('click', () => {
         </div>
     </div>`;
     document.getElementById('certs-list').insertAdjacentHTML('beforeend', html);
+    initDragDrop('certs-list');
 });
 
 function applyTextareaStyle() {
@@ -171,6 +185,9 @@ function extractKeywords(text) {
 // ===== PREVIEW RENDERER =====
 function renderPreview() {
     collect();
+    const template = document.getElementById('template-select').value;
+    const previewEl = document.getElementById('resume-preview');
+    previewEl.className = 'resume-paper' + (template !== 'professional' ? ' template-' + template : '');
     const p = state.personal;
     const contactParts = [p.email, p.phone, p.location, p.linkedin, p.github].filter(Boolean);
     let html = '';
@@ -472,6 +489,8 @@ function autoSave() {
     collect();
     const data = { personal: state.personal, summary: state.summary, experience: state.experience, education: state.education, skills: state.skills, projects: state.projects, certifications: state.certifications, jdText: document.getElementById('jd-input').value };
     localStorage.setItem('rf-data', JSON.stringify(data));
+    localStorage.setItem('rf-save-ts', Date.now().toString());
+    updateFooterTime();
     const ind = document.getElementById('save-indicator');
     ind.classList.add('visible');
     setTimeout(() => ind.classList.remove('visible'), 2000);
@@ -633,6 +652,130 @@ function addCharCount(el, max) {
 addCharCount(document.getElementById('inp-summary'), 500);
 addCharCount(document.getElementById('jd-input'), 0);
 
+// ===== DRAG & DROP =====
+function initDragDrop(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('.list-item').forEach(item => {
+        item.removeEventListener('dragstart', handleDragStart);
+        item.removeEventListener('dragend', handleDragEnd);
+        item.removeEventListener('dragover', handleDragOver);
+        item.removeEventListener('drop', handleDrop);
+        item.removeEventListener('dragleave', handleDragLeave);
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragleave', handleDragLeave);
+    });
+}
+let draggedItem = null;
+function handleDragStart(e) { draggedItem = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function handleDragEnd() { this.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); draggedItem = null; }
+function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (this !== draggedItem) this.classList.add('drag-over'); }
+function handleDragLeave() { this.classList.remove('drag-over'); }
+function handleDrop(e) {
+    e.preventDefault(); this.classList.remove('drag-over');
+    if (draggedItem && this !== draggedItem && this.parentNode === draggedItem.parentNode) {
+        const parent = this.parentNode;
+        const items = [...parent.querySelectorAll('.list-item')];
+        const fromIdx = items.indexOf(draggedItem), toIdx = items.indexOf(this);
+        if (fromIdx < toIdx) parent.insertBefore(draggedItem, this.nextSibling);
+        else parent.insertBefore(draggedItem, this);
+        toast('Item reordered', 'info');
+    }
+}
+
+// ===== DUPLICATE ITEM =====
+function duplicateItem(btn) {
+    const item = btn.closest('.list-item');
+    const clone = item.cloneNode(true);
+    item.querySelectorAll('input, textarea').forEach((inp, i) => {
+        const cloneInp = clone.querySelectorAll('input, textarea')[i];
+        if (cloneInp) cloneInp.value = inp.value;
+    });
+    item.parentNode.insertBefore(clone, item.nextSibling);
+    const containerId = item.parentNode.id;
+    if (containerId) initDragDrop(containerId);
+    applyTextareaStyle();
+    toast('Item duplicated', 'info');
+    updateMetrics();
+}
+
+// ===== METRICS =====
+function updateMetrics() {
+    collect();
+    const text = buildResumeText();
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const readingMin = Math.max(1, Math.ceil(words / 200));
+    let bullets = 0;
+    state.experience.forEach(e => { if (e.bullets) bullets += e.bullets.split('\n').filter(Boolean).length; });
+    state.projects.forEach(p => { if (p.bullets) bullets += p.bullets.split('\n').filter(Boolean).length; });
+    let skillCount = 0;
+    state.skills.forEach(s => { if (s.items) skillCount += s.items.split(',').filter(i => i.trim()).length; });
+    const sections = [state.summary, state.experience.length, state.education.length, state.skills.length, state.projects.length, state.certifications.length].filter(Boolean).length;
+    document.getElementById('metric-words').textContent = words;
+    document.getElementById('metric-sections').textContent = sections + '/6';
+    document.getElementById('metric-reading').textContent = '~' + readingMin + ' min';
+    document.getElementById('metric-bullets').textContent = bullets;
+    document.getElementById('metric-skills').textContent = skillCount;
+}
+document.addEventListener('input', updateMetrics);
+
+// ===== RESET =====
+document.getElementById('btn-reset').addEventListener('click', () => {
+    document.getElementById('modal-reset').classList.add('active');
+});
+document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+    localStorage.removeItem('rf-data');
+    document.getElementById('modal-reset').classList.remove('active');
+    toast('All data cleared. Reloading...', 'info');
+    setTimeout(() => location.reload(), 800);
+});
+
+// ===== WRITING TIPS =====
+const writingTips = [
+    { title: '💡 Quantify Your Impact', text: 'Use <strong>numbers and percentages</strong> to demonstrate results. Instead of "Improved performance", write "Improved API response time by <strong>40%</strong>, reducing latency from 800ms to 480ms."' },
+    { title: '🎯 Mirror the JD', text: 'Use the <strong>exact phrasing</strong> from the job description in your resume. If they say "cross-functional collaboration", use that exact term — not "working with other teams."' },
+    { title: '⚡ Start with Action Verbs', text: 'Begin each bullet with a <strong>power verb</strong>: Led, Architected, Optimized, Spearheaded, Delivered, Orchestrated. Avoid passive phrases like "Was responsible for."' },
+    { title: '📊 Use the STAR Method', text: 'Structure bullets as: <strong>Situation → Task → Action → Result</strong>. This framework ensures every bullet tells a compelling, measurable story.' },
+    { title: '🔑 ATS Keywords Matter', text: 'Include <strong>technical skills as exact keywords</strong> — "Python" not "programming", "AWS" not "cloud". ATS systems match literal strings.' },
+    { title: '📝 Keep It Concise', text: 'Aim for <strong>3-5 bullets per role</strong>. Each should be 1-2 lines max. Recruiters spend ~7 seconds on initial resume scans.' },
+];
+let currentTipIdx = parseInt(localStorage.getItem('rf-tip-idx') || '0') % writingTips.length;
+function showWritingTip() {
+    const tip = writingTips[currentTipIdx];
+    const container = document.querySelector('.panel-resume .panel-body');
+    if (!container) return;
+    const existing = container.querySelector('.tips-panel');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.className = 'tips-panel';
+    el.innerHTML = `<div class="tips-panel-header"><h4>${tip.title}</h4><button class="tip-dismiss" onclick="this.closest('.tips-panel').remove()" title="Dismiss">×</button></div><div class="tip-content">${tip.text}</div>`;
+    container.insertBefore(el, container.firstChild);
+}
+function nextTip() {
+    currentTipIdx = (currentTipIdx + 1) % writingTips.length;
+    localStorage.setItem('rf-tip-idx', currentTipIdx);
+    showWritingTip();
+}
+setInterval(nextTip, 60000);
+
+// ===== FOOTER LAST SAVED =====
+function updateFooterTime() {
+    const ts = localStorage.getItem('rf-save-ts');
+    if (ts) {
+        const diff = Math.round((Date.now() - parseInt(ts)) / 1000);
+        let txt;
+        if (diff < 10) txt = 'Saved just now';
+        else if (diff < 60) txt = 'Saved ' + diff + 's ago';
+        else if (diff < 3600) txt = 'Saved ' + Math.floor(diff / 60) + 'm ago';
+        else txt = 'Saved ' + Math.floor(diff / 3600) + 'h ago';
+        document.getElementById('footer-last-saved').textContent = txt;
+    }
+}
+setInterval(updateFooterTime, 10000);
+
 // ===== INIT =====
 if (!restoreSavedData()) {
     document.getElementById('btn-add-exp').click();
@@ -642,3 +785,8 @@ if (!restoreSavedData()) {
     document.getElementById('btn-add-cert').click();
 }
 updateProgress();
+updateMetrics();
+showWritingTip();
+updateFooterTime();
+// Init drag-drop on all lists
+['experience-list','education-list','skills-list','projects-list','certs-list'].forEach(initDragDrop);

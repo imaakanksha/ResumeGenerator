@@ -63,6 +63,9 @@
                 <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
                 <span>PDF</span>
             </button>
+            <button id="btn-reset" class="theme-toggle" title="Reset all data">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            </button>
             <button id="btn-theme" class="theme-toggle" title="Toggle theme">
                 <svg id="icon-theme" viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
             </button>
@@ -74,6 +77,19 @@
 
     <!-- Progress Bar -->
     <div class="progress-bar-container"><div id="progress-bar" class="progress-bar-fill"></div></div>
+
+    <!-- Metrics Bar -->
+    <div class="metrics-bar" id="metrics-bar">
+        <div class="metric-item">Words: <span class="metric-value" id="metric-words">0</span></div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">Sections: <span class="metric-value" id="metric-sections">0</span></div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">Reading: <span class="metric-value" id="metric-reading">~0 min</span></div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">Bullets: <span class="metric-value" id="metric-bullets">0</span></div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">Skills: <span class="metric-value" id="metric-skills">0</span></div>
+    </div>
 
     <!-- Main Content -->
     <main id="main-content" class="main-content">
@@ -320,6 +336,35 @@
             <button id="btn-do-import" class="btn btn-primary btn-lg" style="width:100%;margin-top:12px;justify-content:center">Import Resume</button>
         </div>
     </div>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="modal-reset" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="document.getElementById('modal-reset').classList.remove('active')">&times;</button>
+            <div class="modal-danger-zone">
+                <div class="danger-icon">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                </div>
+                <h2>Reset All Data?</h2>
+                <p>This will permanently erase all your resume data, job description, and saved progress. This action cannot be undone.</p>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="document.getElementById('modal-reset').classList.remove('active')">Cancel</button>
+                    <button id="btn-confirm-reset" class="btn-danger">Yes, Reset Everything</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span class="footer-version">ResumeForge v2.0</span>
+            <span>ATS-Optimized Resume Builder</span>
+        </div>
+        <div class="footer-right">
+            <span id="footer-last-saved">Not saved yet</span>
+        </div>
+    </footer>
 
     <input type="file" id="file-import" accept=".json" style="display:none">
     <script src="app.js"></script>
