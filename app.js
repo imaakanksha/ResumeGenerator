@@ -788,5 +788,451 @@ updateProgress();
 updateMetrics();
 showWritingTip();
 updateFooterTime();
-// Init drag-drop on all lists
 ['experience-list','education-list','skills-list','projects-list','certs-list'].forEach(initDragDrop);
+
+// ===== COMMAND PALETTE (Ctrl+K) =====
+const commands = [
+    { name: 'Switch to Editor', shortcut: 'Ctrl+1', action: () => document.getElementById('nav-editor').click(), icon: '✏️' },
+    { name: 'Switch to Preview', shortcut: 'Ctrl+2', action: () => document.getElementById('nav-preview').click(), icon: '👁️' },
+    { name: 'Switch to ATS Score', shortcut: 'Ctrl+3', action: () => document.getElementById('nav-ats').click(), icon: '✅' },
+    { name: 'Switch to Cover Letter', shortcut: '', action: () => document.getElementById('nav-coverletter').click(), icon: '📄' },
+    { name: 'Export PDF', shortcut: 'Ctrl+P', action: () => document.getElementById('btn-export-pdf').click(), icon: '📥' },
+    { name: 'Export LaTeX', shortcut: 'Ctrl+L', action: () => document.getElementById('btn-export-tex').click(), icon: '📝' },
+    { name: 'Export JSON', shortcut: '', action: () => document.getElementById('btn-export-json').click(), icon: '💾' },
+    { name: 'Import JSON', shortcut: '', action: () => document.getElementById('btn-import-json').click(), icon: '📂' },
+    { name: 'Copy as Plain Text', shortcut: '', action: () => document.getElementById('btn-copy-text').click(), icon: '📋' },
+    { name: 'Toggle Theme', shortcut: 'Ctrl+D', action: () => themeBtn.click(), icon: '🌗' },
+    { name: 'Toggle Split Preview', shortcut: '', action: () => document.getElementById('btn-split-preview').click(), icon: '⬜' },
+    { name: 'Toggle Focus Mode', shortcut: 'F11', action: () => document.getElementById('btn-fullscreen').click(), icon: '🔳' },
+    { name: 'Version History', shortcut: '', action: () => document.getElementById('btn-versions').click(), icon: '🕐' },
+    { name: 'Run ATS Analysis', shortcut: '', action: () => { document.getElementById('nav-ats').click(); setTimeout(() => document.getElementById('btn-analyze').click(), 200); }, icon: '🎯' },
+    { name: 'Save Resume', shortcut: 'Ctrl+S', action: () => { autoSave(); toast('Resume saved!'); }, icon: '💾' },
+    { name: 'Reset All Data', shortcut: '', action: () => document.getElementById('btn-reset').click(), icon: '🗑️' },
+    { name: 'Keyboard Shortcuts', shortcut: 'Ctrl+/', action: () => document.getElementById('modal-shortcuts').classList.add('active'), icon: '⌨️' },
+    { name: 'Add Experience', shortcut: '', action: () => { document.getElementById('nav-editor').click(); document.getElementById('btn-add-exp').click(); }, icon: '💼' },
+    { name: 'Add Education', shortcut: '', action: () => { document.getElementById('nav-editor').click(); document.getElementById('btn-add-edu').click(); }, icon: '🎓' },
+    { name: 'Add Skill Category', shortcut: '', action: () => { document.getElementById('nav-editor').click(); document.getElementById('btn-add-skill').click(); }, icon: '⚡' },
+    { name: 'Add Project', shortcut: '', action: () => { document.getElementById('nav-editor').click(); document.getElementById('btn-add-proj').click(); }, icon: '🚀' },
+    { name: 'Generate Cover Letter', shortcut: '', action: () => { document.getElementById('nav-coverletter').click(); setTimeout(() => document.getElementById('btn-generate-cl').click(), 200); }, icon: '✨' },
+];
+
+let cmdIdx = 0;
+const cmdOverlay = document.getElementById('command-palette');
+const cmdInput = document.getElementById('command-input');
+const cmdResults = document.getElementById('command-results');
+
+function openCommandPalette() {
+    cmdOverlay.classList.add('active');
+    cmdInput.value = '';
+    cmdIdx = 0;
+    renderCommands(commands);
+    setTimeout(() => cmdInput.focus(), 50);
+}
+function closeCommandPalette() { cmdOverlay.classList.remove('active'); }
+
+function renderCommands(list) {
+    cmdResults.innerHTML = list.map((c, i) => `<div class="command-item${i === cmdIdx ? ' active' : ''}" data-idx="${i}">
+        <span>${c.icon}</span><span>${c.name}</span>${c.shortcut ? `<span class="cmd-shortcut">${c.shortcut}</span>` : ''}
+    </div>`).join('');
+    cmdResults.querySelectorAll('.command-item').forEach(el => {
+        el.addEventListener('click', () => { list[parseInt(el.dataset.idx)].action(); closeCommandPalette(); });
+        el.addEventListener('mouseenter', () => {
+            cmdResults.querySelectorAll('.command-item').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            cmdIdx = parseInt(el.dataset.idx);
+        });
+    });
+}
+
+cmdInput.addEventListener('input', () => {
+    const q = cmdInput.value.toLowerCase();
+    const filtered = commands.filter(c => c.name.toLowerCase().includes(q));
+    cmdIdx = 0;
+    renderCommands(filtered);
+});
+
+cmdInput.addEventListener('keydown', e => {
+    const items = cmdResults.querySelectorAll('.command-item');
+    if (e.key === 'ArrowDown') { e.preventDefault(); cmdIdx = Math.min(cmdIdx + 1, items.length - 1); items.forEach((el, i) => el.classList.toggle('active', i === cmdIdx)); items[cmdIdx]?.scrollIntoView({ block: 'nearest' }); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); cmdIdx = Math.max(cmdIdx - 1, 0); items.forEach((el, i) => el.classList.toggle('active', i === cmdIdx)); items[cmdIdx]?.scrollIntoView({ block: 'nearest' }); }
+    if (e.key === 'Enter' && items[cmdIdx]) { items[cmdIdx].click(); }
+});
+
+cmdOverlay.addEventListener('click', e => { if (e.target === cmdOverlay) closeCommandPalette(); });
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); cmdOverlay.classList.contains('active') ? closeCommandPalette() : openCommandPalette(); }
+});
+
+// ===== VERSION HISTORY =====
+document.getElementById('btn-versions').addEventListener('click', () => {
+    document.getElementById('modal-versions').classList.add('active');
+    renderVersions();
+});
+
+function getVersions() {
+    try { return JSON.parse(localStorage.getItem('rf-versions') || '[]'); } catch { return []; }
+}
+
+document.getElementById('btn-save-version').addEventListener('click', () => {
+    collect();
+    const versions = getVersions();
+    const data = { personal: state.personal, summary: state.summary, experience: state.experience, education: state.education, skills: state.skills, projects: state.projects, certifications: state.certifications };
+    const wordCount = buildResumeText().trim().split(/\s+/).filter(Boolean).length;
+    versions.unshift({ ts: Date.now(), data, wordCount, sections: [state.summary, state.experience.length, state.education.length, state.skills.length, state.projects.length, state.certifications.length].filter(Boolean).length });
+    if (versions.length > 20) versions.length = 20;
+    localStorage.setItem('rf-versions', JSON.stringify(versions));
+    toast('Version saved!');
+    renderVersions();
+});
+
+document.getElementById('btn-clear-versions').addEventListener('click', () => {
+    localStorage.removeItem('rf-versions');
+    renderVersions();
+    toast('Version history cleared', 'info');
+});
+
+function renderVersions() {
+    const versions = getVersions();
+    const el = document.getElementById('versions-list');
+    if (!versions.length) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:30px">No saved versions yet. Click "Save Current Version" to create one.</p>'; return; }
+    el.innerHTML = versions.map((v, i) => {
+        const d = new Date(v.ts);
+        const timeStr = d.toLocaleString();
+        return `<div class="version-card"><div class="version-info"><div class="version-ts">${timeStr}</div><div class="version-meta">${v.wordCount || '?'} words · ${v.sections || '?'}/6 sections</div></div><span class="version-badge">${i === 0 ? 'Latest' : 'v' + (versions.length - i)}</span><button class="btn-restore" onclick="restoreVersion(${i})">Restore</button></div>`;
+    }).join('');
+}
+
+window.restoreVersion = function(idx) {
+    const versions = getVersions();
+    if (!versions[idx]) return;
+    localStorage.setItem('rf-data', JSON.stringify(versions[idx].data));
+    document.getElementById('modal-versions').classList.remove('active');
+    toast('Version restored! Reloading...', 'info');
+    setTimeout(() => location.reload(), 600);
+};
+
+// ===== COVER LETTER GENERATOR =====
+document.getElementById('btn-generate-cl').addEventListener('click', () => {
+    collect();
+    const company = document.getElementById('cl-company').value || 'your company';
+    const role = document.getElementById('cl-role').value || 'the open position';
+    const manager = document.getElementById('cl-manager').value;
+    const tone = document.getElementById('cl-tone').value;
+    const p = state.personal;
+    const jd = document.getElementById('jd-input').value.trim();
+
+    const greeting = manager ? `Dear ${manager},` : 'Dear Hiring Manager,';
+    const skills = state.skills.map(s => s.items).filter(Boolean).join(', ');
+    const expYears = state.experience.length > 0 ? state.experience.length + '+' : 'several';
+    const topExp = state.experience[0];
+    const topProj = state.projects[0];
+
+    let body = '';
+    if (tone === 'enthusiastic') {
+        body = `I am thrilled to apply for the ${role} role at ${company}! With ${expYears} years of professional experience and a passion for delivering impactful solutions, I am confident I would be an excellent addition to your team.\n\n`;
+    } else if (tone === 'concise') {
+        body = `I am writing to express my interest in the ${role} position at ${company}. My background in ${skills ? skills.split(',').slice(0, 3).join(', ') : 'software development'} makes me a strong fit for this role.\n\n`;
+    } else {
+        body = `I am writing to express my strong interest in the ${role} position at ${company}. With ${expYears} years of experience in the field and a proven track record of delivering results, I believe I would be a valuable asset to your organization.\n\n`;
+    }
+
+    if (topExp) {
+        body += `In my role as ${topExp.title || 'a professional'} at ${topExp.company || 'my previous company'}, I ${topExp.bullets ? topExp.bullets.split('\n')[0].replace(/^[•\-]\s*/, '').toLowerCase() : 'contributed significantly to key initiatives'}. `;
+    }
+    if (skills) {
+        body += `My technical expertise spans ${skills.split(',').slice(0, 6).join(', ')}, which aligns well with the requirements outlined in the job description.\n\n`;
+    }
+    if (topProj) {
+        body += `Additionally, I developed ${topProj.name || 'a significant project'}${topProj.tech ? ' using ' + topProj.tech : ''}, demonstrating my ability to deliver end-to-end solutions.\n\n`;
+    }
+    if (jd) {
+        const jdKeywords = extractKeywords(jd).slice(0, 5);
+        if (jdKeywords.length) body += `I noticed your team values expertise in ${jdKeywords.join(', ')}, areas where I have substantial hands-on experience.\n\n`;
+    }
+    body += `I am eager to bring my skills and enthusiasm to ${company} and contribute to your team's continued success. I look forward to the opportunity to discuss how my background aligns with your needs.\n\nThank you for considering my application.`;
+
+    document.getElementById('cl-body').value = body;
+    renderCoverLetter();
+    toast('Cover letter generated!');
+});
+
+function renderCoverLetter() {
+    const p = state.personal || {};
+    const company = document.getElementById('cl-company').value;
+    const manager = document.getElementById('cl-manager').value;
+    const body = document.getElementById('cl-body').value;
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const greeting = manager ? `Dear ${manager},` : 'Dear Hiring Manager,';
+
+    let html = `<div class="cl-header"><strong>${esc(p.name || 'Your Name')}</strong><br>${[p.email, p.phone, p.location].filter(Boolean).map(esc).join(' | ')}</div>`;
+    html += `<div class="cl-date">${today}</div>`;
+    html += `<div class="cl-greeting">${esc(greeting)}</div>`;
+    body.split('\n\n').filter(Boolean).forEach(para => { html += `<div class="cl-paragraph">${esc(para)}</div>`; });
+    html += `<div class="cl-closing">Sincerely,</div>`;
+    html += `<div class="cl-signature">${esc(p.name || 'Your Name')}</div>`;
+    document.getElementById('cl-preview').innerHTML = html;
+}
+
+document.getElementById('cl-body')?.addEventListener('input', renderCoverLetter);
+document.getElementById('cl-company')?.addEventListener('input', renderCoverLetter);
+document.getElementById('cl-manager')?.addEventListener('input', renderCoverLetter);
+
+// ===== SPLIT PREVIEW =====
+document.getElementById('btn-split-preview').addEventListener('click', () => {
+    const active = document.body.classList.toggle('split-preview');
+    if (active) {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('nav-editor').classList.add('active');
+        document.getElementById('view-editor').classList.add('active');
+        document.getElementById('view-preview').classList.add('active');
+        renderPreview();
+        toast('Split preview enabled', 'info');
+        // Live update preview on input
+        document.addEventListener('input', splitPreviewUpdate);
+    } else {
+        document.removeEventListener('input', splitPreviewUpdate);
+        document.getElementById('view-preview').classList.remove('active');
+        toast('Split preview disabled', 'info');
+    }
+});
+function splitPreviewUpdate() { if (document.body.classList.contains('split-preview')) renderPreview(); }
+
+// ===== COLOR THEME FOR RESUME =====
+let resumeAccentColor = '#2563eb';
+document.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', () => {
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        resumeAccentColor = swatch.dataset.color;
+        const paper = document.getElementById('resume-preview');
+        paper.style.setProperty('--resume-accent', resumeAccentColor);
+        // Apply to modern template headings dynamically
+        document.querySelectorAll('.resume-paper h2, .resume-paper.template-modern h1').forEach(el => {
+            if (document.getElementById('template-select').value === 'modern') el.style.color = resumeAccentColor;
+        });
+        if (document.getElementById('template-select').value === 'modern') {
+            document.querySelectorAll('.resume-paper.template-modern h2').forEach(el => el.style.borderBottomColor = resumeAccentColor);
+        }
+        renderPreview();
+        toast('Accent color updated', 'info');
+    });
+});
+
+// ===== COPY AS PLAIN TEXT =====
+document.getElementById('btn-copy-text').addEventListener('click', () => {
+    collect();
+    const p = state.personal;
+    let text = (p.name || '') + '\n';
+    text += [p.email, p.phone, p.location, p.linkedin, p.github].filter(Boolean).join(' | ') + '\n\n';
+    if (state.summary) text += 'PROFESSIONAL SUMMARY\n' + state.summary + '\n\n';
+    if (state.experience.length) {
+        text += 'EXPERIENCE\n';
+        state.experience.forEach(e => {
+            text += `${e.title || ''} | ${e.company || ''} | ${e.start || ''} - ${e.end || ''}\n`;
+            if (e.bullets) e.bullets.split('\n').filter(Boolean).forEach(b => { text += '  • ' + b.replace(/^[•\-]\s*/, '') + '\n'; });
+            text += '\n';
+        });
+    }
+    if (state.education.length) {
+        text += 'EDUCATION\n';
+        state.education.forEach(e => { text += `${e.degree || ''} | ${e.school || ''} | ${e.year || ''}${e.gpa ? ' | GPA: ' + e.gpa : ''}\n`; });
+        text += '\n';
+    }
+    if (state.skills.length) {
+        text += 'SKILLS\n';
+        state.skills.forEach(s => { text += `${s.category || ''}: ${s.items || ''}\n`; });
+        text += '\n';
+    }
+    if (state.projects.length) {
+        text += 'PROJECTS\n';
+        state.projects.forEach(pr => {
+            text += `${pr.name || ''}${pr.tech ? ' (' + pr.tech + ')' : ''}\n`;
+            if (pr.bullets) pr.bullets.split('\n').filter(Boolean).forEach(b => { text += '  • ' + b.replace(/^[•\-]\s*/, '') + '\n'; });
+            text += '\n';
+        });
+    }
+    if (state.certifications.length) {
+        text += 'CERTIFICATIONS\n';
+        state.certifications.forEach(c => { text += `${c.name || ''} - ${c.issuer || ''} (${c.year || ''})\n`; });
+    }
+    navigator.clipboard.writeText(text.trim()).then(() => toast('Copied to clipboard!')).catch(() => toast('Copy failed', 'error'));
+});
+
+// ===== UNDO / REDO =====
+const undoStack = [];
+const redoStack = [];
+let lastSnapshot = '';
+
+function takeSnapshot() {
+    collect();
+    const snap = JSON.stringify({ personal: state.personal, summary: state.summary, experience: state.experience, education: state.education, skills: state.skills, projects: state.projects, certifications: state.certifications });
+    if (snap !== lastSnapshot) {
+        undoStack.push(lastSnapshot);
+        if (undoStack.length > 30) undoStack.shift();
+        redoStack.length = 0;
+        lastSnapshot = snap;
+    }
+}
+
+function applySnapshot(snap) {
+    if (!snap) return;
+    const data = JSON.parse(snap);
+    localStorage.setItem('rf-data', JSON.stringify(data));
+    location.reload();
+}
+
+document.getElementById('btn-undo').addEventListener('click', () => {
+    if (!undoStack.length) { toast('Nothing to undo', 'info'); return; }
+    collect();
+    redoStack.push(JSON.stringify({ personal: state.personal, summary: state.summary, experience: state.experience, education: state.education, skills: state.skills, projects: state.projects, certifications: state.certifications }));
+    const prev = undoStack.pop();
+    lastSnapshot = prev;
+    toast('Undoing...', 'info');
+    applySnapshot(prev);
+});
+
+document.getElementById('btn-redo').addEventListener('click', () => {
+    if (!redoStack.length) { toast('Nothing to redo', 'info'); return; }
+    undoStack.push(lastSnapshot);
+    const next = redoStack.pop();
+    lastSnapshot = next;
+    toast('Redoing...', 'info');
+    applySnapshot(next);
+});
+
+// Take snapshots on significant actions
+let snapshotTimer = null;
+document.addEventListener('input', () => { clearTimeout(snapshotTimer); snapshotTimer = setTimeout(takeSnapshot, 3000); });
+// Initial snapshot
+collect();
+lastSnapshot = JSON.stringify({ personal: state.personal, summary: state.summary, experience: state.experience, education: state.education, skills: state.skills, projects: state.projects, certifications: state.certifications });
+
+// ===== FULLSCREEN FOCUS MODE =====
+document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    const active = document.body.classList.toggle('focus-mode');
+    toast(active ? 'Focus mode — hover top/bottom to show controls' : 'Focus mode off', 'info');
+});
+
+// ===== SECTION STRENGTH INDICATORS =====
+function updateStrengthMeters() {
+    collect();
+    const meters = {
+        'section-personal': (() => {
+            const p = state.personal;
+            let score = 0;
+            if (p.name) score += 25; if (p.email) score += 25; if (p.phone) score += 15;
+            if (p.location) score += 15; if (p.linkedin) score += 10; if (p.github) score += 10;
+            return score;
+        })(),
+        'section-summary': (() => {
+            const s = document.getElementById('inp-summary').value;
+            if (!s) return 0;
+            let score = Math.min(50, s.length / 4);
+            if (s.length > 100) score += 25;
+            if (s.length > 200) score += 25;
+            return Math.min(100, Math.round(score));
+        })(),
+        'section-experience': (() => {
+            if (!state.experience.length) return 0;
+            let score = Math.min(40, state.experience.length * 20);
+            state.experience.forEach(e => { if (e.bullets && e.bullets.split('\n').filter(Boolean).length >= 3) score += 15; });
+            return Math.min(100, score);
+        })(),
+        'section-education': (() => {
+            if (!state.education.length) return 0;
+            let score = 50;
+            state.education.forEach(e => { if (e.degree) score += 15; if (e.school) score += 15; if (e.year) score += 10; if (e.gpa) score += 10; });
+            return Math.min(100, score);
+        })(),
+        'section-skills': (() => {
+            if (!state.skills.length) return 0;
+            let totalSkills = 0;
+            state.skills.forEach(s => { if (s.items) totalSkills += s.items.split(',').filter(i => i.trim()).length; });
+            return Math.min(100, totalSkills * 10);
+        })(),
+        'section-projects': (() => {
+            if (!state.projects.length) return 0;
+            let score = Math.min(40, state.projects.length * 20);
+            state.projects.forEach(p => { if (p.tech) score += 10; if (p.bullets) score += 15; });
+            return Math.min(100, score);
+        })(),
+        'section-certifications': (() => {
+            if (!state.certifications.length) return 0;
+            return Math.min(100, state.certifications.length * 33);
+        })()
+    };
+
+    Object.entries(meters).forEach(([sectionId, score]) => {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        const header = section.querySelector('.section-header');
+        let meter = header.querySelector('.section-strength');
+        if (!meter) {
+            meter = document.createElement('div');
+            meter.className = 'section-strength';
+            meter.innerHTML = '<div class="strength-bar"><div class="strength-fill"></div></div><span class="strength-label"></span>';
+            const chevron = header.querySelector('.chevron');
+            header.insertBefore(meter, chevron);
+        }
+        const fill = meter.querySelector('.strength-fill');
+        const label = meter.querySelector('.strength-label');
+        fill.style.width = score + '%';
+        fill.style.background = score >= 70 ? 'var(--accent-green)' : score >= 40 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+        label.textContent = score + '%';
+        label.style.color = score >= 70 ? 'var(--accent-green)' : score >= 40 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+    });
+}
+document.addEventListener('input', () => { clearTimeout(window._strengthTimer); window._strengthTimer = setTimeout(updateStrengthMeters, 500); });
+updateStrengthMeters();
+
+// ===== ONBOARDING TOUR =====
+const tourSteps = [
+    { icon: '🚀', title: 'Welcome to ResumeForge v3!', text: 'Build ATS-optimized resumes with real-time scoring, keyword analysis, cover letter generation, and Overleaf LaTeX export.' },
+    { icon: '📝', title: 'Smart Editor', text: 'Fill in your details in the Editor tab. Each section has a strength meter showing completeness. Drag & drop to reorder items.' },
+    { icon: '🎯', title: 'ATS Analysis', text: 'Paste a job description, then run ATS analysis to see your keyword match, format score, and get actionable recommendations.' },
+    { icon: '📄', title: 'Cover Letter Generator', text: 'Auto-generate tailored cover letters based on your resume data and the job description. Choose from multiple tones.' },
+    { icon: '⌨️', title: 'Power User Features', text: 'Press Ctrl+K for the command palette, Ctrl+S to save, or use the split preview mode for live editing. Version history lets you restore past snapshots.' },
+    { icon: '✨', title: 'You\'re All Set!', text: 'Start building your perfect resume. Use the color picker and templates to customize your output. Good luck!' }
+];
+let tourStep = 0;
+
+function showTourStep() {
+    const step = tourSteps[tourStep];
+    document.getElementById('onboarding-content').innerHTML = `<span class="ob-icon">${step.icon}</span><h2>${step.title}</h2><p>${step.text}</p>`;
+    document.getElementById('onboarding-dots').innerHTML = tourSteps.map((_, i) => `<div class="onboarding-dot${i === tourStep ? ' active' : ''}"></div>`).join('');
+    document.getElementById('onboarding-next').textContent = tourStep === tourSteps.length - 1 ? 'Get Started →' : 'Next →';
+}
+
+document.getElementById('onboarding-next').addEventListener('click', () => {
+    tourStep++;
+    if (tourStep >= tourSteps.length) {
+        document.getElementById('onboarding-overlay').classList.remove('active');
+        localStorage.setItem('rf-onboarded', '1');
+    } else { showTourStep(); }
+});
+
+document.getElementById('onboarding-skip').addEventListener('click', () => {
+    document.getElementById('onboarding-overlay').classList.remove('active');
+    localStorage.setItem('rf-onboarded', '1');
+});
+
+// Show onboarding for first-time users
+if (!localStorage.getItem('rf-onboarded')) {
+    tourStep = 0;
+    showTourStep();
+    document.getElementById('onboarding-overlay').classList.add('active');
+}
+
+// ===== COVER LETTER NAV UPDATE =====
+// Make cover letter tab render preview on switch
+const origNavHandler = () => {};
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.dataset.view === 'coverletter') { collect(); renderCoverLetter(); }
+        // Disable split preview when switching views
+        if (document.body.classList.contains('split-preview') && btn.dataset.view !== 'editor') {
+            document.body.classList.remove('split-preview');
+        }
+    });
+});
