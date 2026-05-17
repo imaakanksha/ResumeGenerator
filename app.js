@@ -1188,12 +1188,12 @@ updateStrengthMeters();
 
 // ===== ONBOARDING TOUR =====
 const tourSteps = [
-    { icon: '🚀', title: 'Welcome to ResumeForge v3!', text: 'Build ATS-optimized resumes with real-time scoring, keyword analysis, cover letter generation, and Overleaf LaTeX export.' },
-    { icon: '📝', title: 'Smart Editor', text: 'Fill in your details in the Editor tab. Each section has a strength meter showing completeness. Drag & drop to reorder items.' },
-    { icon: '🎯', title: 'ATS Analysis', text: 'Paste a job description, then run ATS analysis to see your keyword match, format score, and get actionable recommendations.' },
-    { icon: '📄', title: 'Cover Letter Generator', text: 'Auto-generate tailored cover letters based on your resume data and the job description. Choose from multiple tones.' },
-    { icon: '⌨️', title: 'Power User Features', text: 'Press Ctrl+K for the command palette, Ctrl+S to save, or use the split preview mode for live editing. Version history lets you restore past snapshots.' },
-    { icon: '✨', title: 'You\'re All Set!', text: 'Start building your perfect resume. Use the color picker and templates to customize your output. Good luck!' }
+    { icon: '🔥', title: 'Welcome to ResuForge Pro!', text: 'Your AI-powered Career Intelligence Platform. Upload career files, match skills to job requirements, and forge the perfect tailored resume.' },
+    { icon: '📁', title: 'Career Vault', text: 'Upload your career documents — resumes, certificates, project docs. ResuForge extracts your skills, experience, and qualifications automatically.' },
+    { icon: '⚡', title: 'Forge Your Resume', text: 'Paste a job description and hit "Forge My Resume" to auto-generate a tailored resume matching your skills to the job requirements.' },
+    { icon: '🔍', title: 'Skill Gap Analysis', text: 'See which skills you have, which were added to match the JD (learn these!), and get personalized learning recommendations.' },
+    { icon: '🎯', title: 'ATS Scoring', text: 'Run ATS analysis to see keyword match, format score, and get actionable recommendations to optimize your resume.' },
+    { icon: '✨', title: 'You\'re All Set!', text: 'Start by uploading your career files in the Career Vault, paste a job description, and let ResuForge Pro do the magic!' }
 ];
 let tourStep = 0;
 
@@ -1235,4 +1235,378 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
             document.body.classList.remove('split-preview');
         }
     });
+});
+
+// ============================================================
+// ===== CAREER VAULT: FILE UPLOAD & PARSING ENGINE =====
+// ============================================================
+const vaultFiles = []; // { name, size, type, content, parsed: bool }
+const careerIntel = { skills: new Set(), experience: [], education: [], projects: [], rawText: '' };
+
+// Drop zone interactions
+const dropZone = document.getElementById('drop-zone');
+const vaultFileInput = document.getElementById('vault-file-input');
+
+document.getElementById('btn-browse-files').addEventListener('click', (e) => {
+    e.stopPropagation();
+    vaultFileInput.click();
+});
+dropZone.addEventListener('click', () => vaultFileInput.click());
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-active'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-active');
+    handleVaultFiles(e.dataTransfer.files);
+});
+vaultFileInput.addEventListener('change', (e) => handleVaultFiles(e.target.files));
+
+function handleVaultFiles(files) {
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            vaultFiles.push({ name: file.name, size: file.size, type: file.type, content: e.target.result, parsed: false });
+            renderVaultFiles();
+            parseVaultFile(vaultFiles.length - 1);
+        };
+        reader.readAsText(file);
+    });
+}
+
+function renderVaultFiles() {
+    const grid = document.getElementById('vault-files-grid');
+    const list = document.getElementById('vault-files-list');
+    list.style.display = 'block';
+    grid.innerHTML = vaultFiles.map((f, i) => {
+        const ext = f.name.split('.').pop().toLowerCase();
+        const iconClass = ['txt','md','csv'].includes(ext) ? 'txt' : ext === 'pdf' ? 'pdf' : ['doc','docx'].includes(ext) ? 'doc' : 'other';
+        const icons = { txt: '📄', pdf: '📕', doc: '📘', other: '📎' };
+        const sizeStr = f.size < 1024 ? f.size + 'B' : (f.size / 1024).toFixed(1) + 'KB';
+        return `<div class="vault-file-card"><div class="vault-file-icon ${iconClass}">${icons[iconClass]}</div><div class="vault-file-info"><div class="fname">${esc(f.name)}</div><div class="fsize">${sizeStr}</div></div><span class="vault-file-status ${f.parsed ? 'parsed' : 'pending'}">${f.parsed ? '✓ Parsed' : '⏳ Pending'}</span></div>`;
+    }).join('');
+}
+
+function parseVaultFile(idx) {
+    const file = vaultFiles[idx];
+    if (!file || !file.content) return;
+    const text = file.content;
+    careerIntel.rawText += '\n' + text;
+
+    // Extract skills from text
+    const allSkills = ['python','java','javascript','typescript','react','angular','vue','node.js','express','django','flask','spring boot','docker','kubernetes','aws','azure','gcp','sql','nosql','mongodb','postgresql','mysql','redis','git','ci/cd','jenkins','terraform','ansible','linux','agile','scrum','rest api','graphql','microservices','machine learning','deep learning','nlp','tensorflow','pytorch','pandas','numpy','html','css','sass','webpack','jest','selenium','cypress','jira','confluence','figma','tableau','power bi','spark','hadoop','kafka','elasticsearch','nginx','c++','c#','.net','ruby','rails','go','rust','swift','kotlin','flutter','react native','ios','android','devops','data engineering','data science','cloud computing','serverless','lambda','api','oauth','jwt','security','networking','http','websocket','grpc','next.js','fastapi','spring','celery','rabbitmq','airflow','dbt','snowflake','databricks','github actions','gitlab ci','circleci','prometheus','grafana','datadog','new relic','solidity','blockchain','web3','langchain','openai','gpt','llm','rag','vector database','pinecone','weaviate','chromadb','hugging face','scikit-learn','matplotlib','seaborn','r','matlab','sas','excel','vba','sharepoint','salesforce','sap','oracle','adobe xd','sketch','tailwindcss','bootstrap','material ui','three.js','d3.js','socket.io','redis','memcached','dynamodb','cassandra','couchdb','firebase','supabase','vercel','netlify','heroku','digital ocean','cloudflare'];
+
+    const lower = text.toLowerCase();
+    allSkills.forEach(skill => {
+        if (lower.includes(skill)) careerIntel.skills.add(skill);
+    });
+
+    // Extract experience patterns
+    const expPatterns = text.match(/(?:worked|working|experience|role|position|employed|engineer|developer|manager|analyst|architect|consultant|intern|lead|senior|junior|staff)\s+(?:at|with|for|as|in)\s+[\w\s,]+/gi) || [];
+    expPatterns.forEach(p => {
+        if (p.length > 10 && p.length < 200) careerIntel.experience.push(p.trim());
+    });
+
+    // Extract education patterns
+    const eduPatterns = text.match(/(?:B\.?S\.?|B\.?E\.?|M\.?S\.?|M\.?Tech|Ph\.?D|Bachelor|Master|MBA|Diploma|Certificate|B\.?Tech|M\.?Sc)\s*(?:in|of)?\s*[\w\s,]+/gi) || [];
+    eduPatterns.forEach(p => {
+        if (p.length > 5 && p.length < 150) careerIntel.education.push(p.trim());
+    });
+
+    // Extract project names
+    const projPatterns = text.match(/(?:project|built|developed|created|designed|implemented|launched)\s*:?\s*[\w\s\-]+/gi) || [];
+    projPatterns.forEach(p => {
+        if (p.length > 8 && p.length < 120) careerIntel.projects.push(p.trim());
+    });
+
+    // Extract capitalized acronyms as potential skills
+    const acronyms = text.match(/\b[A-Z]{2,6}\b/g) || [];
+    const skipWords = new Set(['THE','AND','FOR','WITH','THIS','THAT','FROM','HAVE','WILL','YOUR','ABOUT','BEEN','EACH','MAKE','ALSO','THEY','WHAT','WHEN','WERE','MORE','SOME','THAN','LIKE','JUST','OVER','SUCH','TAKE','INTO','YEAR','ONLY','COME','MADE','AFTER','BACK','COULD','THEM','THESE','THEN','TWO','HOW','ITS','OUR','WORK','WELL','WAY','EVEN','NEW','WANT','ANY','GIVE','DAY','MOST','HER','HIS','HIM','NOT','NOW','USE','SHE','SAY','CAN','MAY']);
+    acronyms.forEach(a => { if (!skipWords.has(a) && a.length >= 2) careerIntel.skills.add(a); });
+
+    vaultFiles[idx].parsed = true;
+    renderVaultFiles();
+    renderExtractedIntel();
+}
+
+function renderExtractedIntel() {
+    const el = document.getElementById('vault-extracted');
+    el.style.display = 'block';
+
+    const skillsArr = [...careerIntel.skills];
+    document.querySelector('#extracted-skills .extracted-content').innerHTML =
+        skillsArr.length ? skillsArr.map(s => `<span class="ext-tag">${esc(s)}</span>`).join('') : '<em>No skills detected yet</em>';
+
+    const uniqExp = [...new Set(careerIntel.experience)].slice(0, 6);
+    document.querySelector('#extracted-experience .extracted-content').innerHTML =
+        uniqExp.length ? uniqExp.map(e => `<div style="margin-bottom:6px;font-size:0.8rem">• ${esc(e)}</div>`).join('') : '<em>No experience detected</em>';
+
+    const uniqEdu = [...new Set(careerIntel.education)].slice(0, 4);
+    document.querySelector('#extracted-education .extracted-content').innerHTML =
+        uniqEdu.length ? uniqEdu.map(e => `<div style="margin-bottom:6px;font-size:0.8rem">• ${esc(e)}</div>`).join('') : '<em>No education detected</em>';
+
+    const uniqProj = [...new Set(careerIntel.projects)].slice(0, 6);
+    document.querySelector('#extracted-projects .extracted-content').innerHTML =
+        uniqProj.length ? uniqProj.map(p => `<div style="margin-bottom:6px;font-size:0.8rem">• ${esc(p)}</div>`).join('') : '<em>No projects detected</em>';
+}
+
+// Clear vault
+document.getElementById('btn-clear-vault').addEventListener('click', () => {
+    vaultFiles.length = 0;
+    careerIntel.skills.clear();
+    careerIntel.experience.length = 0;
+    careerIntel.education.length = 0;
+    careerIntel.projects.length = 0;
+    careerIntel.rawText = '';
+    document.getElementById('vault-files-list').style.display = 'none';
+    document.getElementById('vault-extracted').style.display = 'none';
+    toast('Career vault cleared', 'info');
+});
+
+// ============================================================
+// ===== FORGE RESUME: MATCH CAREER DATA TO JOB =====
+// ============================================================
+const forgeState = { matchedSkills: [], addedSkills: [], missingSkills: [] };
+
+document.getElementById('btn-forge-resume').addEventListener('click', () => {
+    const jdText = document.getElementById('vault-jd-input').value.trim();
+    if (!jdText) { toast('Please paste a job description first', 'error'); return; }
+    if (vaultFiles.length === 0) { toast('Please upload career files first', 'error'); return; }
+
+    // Copy JD to the editor's JD panel too
+    document.getElementById('jd-input').value = jdText;
+
+    // Extract JD requirements
+    const jdKeywords = extractKeywords(jdText);
+    state.jdKeywords = jdKeywords;
+
+    const mySkills = careerIntel.skills;
+    const myText = careerIntel.rawText.toLowerCase();
+
+    const matched = [];
+    const added = [];
+    const missing = [];
+
+    jdKeywords.forEach(kw => {
+        const kwLower = kw.toLowerCase();
+        if (mySkills.has(kwLower) || myText.includes(kwLower)) {
+            matched.push(kw);
+        } else {
+            // Determine if we should add it to resume or mark as missing
+            const isLearnableSkill = isSkillKeyword(kwLower);
+            if (isLearnableSkill) {
+                added.push(kw);
+            } else {
+                missing.push(kw);
+            }
+        }
+    });
+
+    forgeState.matchedSkills = matched;
+    forgeState.addedSkills = added;
+    forgeState.missingSkills = missing;
+
+    // Auto-populate the editor with extracted data
+    populateEditorFromVault(matched, added);
+
+    toast(`Resume forged! ${matched.length} matched, ${added.length} added skills`, 'success');
+
+    // Switch to editor view
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('nav-editor').classList.add('active');
+    document.getElementById('view-editor').classList.add('active');
+});
+
+function isSkillKeyword(kw) {
+    const techTerms = ['python','java','javascript','typescript','react','angular','vue','node','express','django','flask','spring','docker','kubernetes','aws','azure','gcp','sql','nosql','mongodb','postgresql','mysql','redis','git','ci/cd','jenkins','terraform','ansible','linux','rest','graphql','microservices','machine learning','deep learning','nlp','tensorflow','pytorch','html','css','webpack','jest','jira','spark','hadoop','kafka','elasticsearch','c++','c#','.net','ruby','go','rust','swift','kotlin','flutter','devops','serverless','api','oauth','jwt','next.js','fastapi','langchain','llm','rag','scikit-learn','airflow','dbt','snowflake','databricks','prometheus','grafana','tailwindcss','bootstrap','firebase','supabase'];
+    return techTerms.some(t => kw.includes(t) || t.includes(kw));
+}
+
+function populateEditorFromVault(matched, added) {
+    // Extract personal info patterns from career text
+    const emailMatch = careerIntel.rawText.match(/[\w.-]+@[\w.-]+\.\w+/);
+    const phoneMatch = careerIntel.rawText.match(/[\+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,15}/);
+    const nameMatch = careerIntel.rawText.match(/^([A-Z][a-z]+ [A-Z][a-z]+)/m);
+
+    if (nameMatch && !document.getElementById('inp-name').value) document.getElementById('inp-name').value = nameMatch[1];
+    if (emailMatch && !document.getElementById('inp-email').value) document.getElementById('inp-email').value = emailMatch[0];
+    if (phoneMatch && !document.getElementById('inp-phone').value) document.getElementById('inp-phone').value = phoneMatch[0].trim();
+
+    // Populate skills - combine matched + added
+    const skillsList = document.getElementById('skills-list');
+    if (skillsList.querySelectorAll('.list-item').length <= 1) {
+        skillsList.innerHTML = '';
+        // Your existing skills
+        if (matched.length > 0) {
+            document.getElementById('btn-add-skill').click();
+            const lastItem = skillsList.lastElementChild;
+            lastItem.querySelector('[data-field="category"]').value = 'Core Technologies';
+            lastItem.querySelector('[data-field="items"]').value = matched.join(', ');
+        }
+        // Skills added from JD (need to learn)
+        if (added.length > 0) {
+            document.getElementById('btn-add-skill').click();
+            const lastItem = skillsList.lastElementChild;
+            lastItem.querySelector('[data-field="category"]').value = 'Additional Skills (from JD)';
+            lastItem.querySelector('[data-field="items"]').value = added.join(', ');
+        }
+    }
+
+    // Generate a tailored summary
+    const jdText = document.getElementById('vault-jd-input').value;
+    const roleMatch = jdText.match(/(?:seeking|looking for|hiring|role|position)\s*(?:a|an)?\s*([\w\s]+?)(?:\.|,|with|who)/i);
+    const roleName = roleMatch ? roleMatch[1].trim() : 'Software Professional';
+    const allSkills = [...matched, ...added].slice(0, 6).join(', ');
+    const summaryEl = document.getElementById('inp-summary');
+    if (!summaryEl.value) {
+        summaryEl.value = `Results-driven ${roleName} with expertise in ${allSkills}. Proven track record of delivering high-impact solutions, optimizing performance, and collaborating across cross-functional teams. Passionate about leveraging cutting-edge technologies to solve complex problems and drive business outcomes.`;
+    }
+
+    // Auto-populate experience from extracted data
+    const expList = document.getElementById('experience-list');
+    if (expList.querySelectorAll('.list-item').length <= 1) {
+        const uniqExp = [...new Set(careerIntel.experience)].slice(0, 3);
+        if (uniqExp.length > 0) {
+            expList.innerHTML = '';
+            uniqExp.forEach(exp => {
+                document.getElementById('btn-add-exp').click();
+                const lastItem = expList.lastElementChild;
+                const parts = exp.split(/\s+(?:at|with|for|as|in)\s+/i);
+                if (parts.length >= 2) {
+                    lastItem.querySelector('[data-field="title"]').value = parts[0].replace(/^(worked|working|experience|role|position)\s*/i, '').trim();
+                    lastItem.querySelector('[data-field="company"]').value = parts[1].trim();
+                }
+            });
+        }
+    }
+
+    updateMetrics();
+    updateProgress();
+    updateStrengthMeters();
+    scheduleAutoSave();
+}
+
+// ============================================================
+// ===== SKILL GAP ANALYSIS ENGINE =====
+// ============================================================
+document.getElementById('btn-run-skillgap').addEventListener('click', runSkillGapAnalysis);
+
+function runSkillGapAnalysis() {
+    const jdText = document.getElementById('vault-jd-input').value.trim() || document.getElementById('jd-input').value.trim();
+    if (!jdText) { toast('Please paste a job description first', 'error'); return; }
+
+    collect();
+    const jdKeywords = extractKeywords(jdText);
+    const resumeText = buildResumeText().toLowerCase();
+    const myVaultText = careerIntel.rawText.toLowerCase();
+    const combinedText = resumeText + ' ' + myVaultText;
+
+    const matched = [];
+    const added = [];
+    const missing = [];
+
+    jdKeywords.forEach(kw => {
+        const kwLower = kw.toLowerCase();
+        if (myVaultText.includes(kwLower) || [...careerIntel.skills].some(s => s.includes(kwLower) || kwLower.includes(s))) {
+            matched.push(kw);
+        } else if (resumeText.includes(kwLower)) {
+            added.push(kw);
+        } else {
+            missing.push(kw);
+        }
+    });
+
+    const totalRequired = jdKeywords.length || 1;
+    const matchPct = Math.round(((matched.length + added.length * 0.5) / totalRequired) * 100);
+    const finalPct = Math.min(100, matchPct);
+
+    // Animate donut
+    const arc = document.getElementById('skillgap-arc');
+    const circumference = 2 * Math.PI * 85;
+    const pctEl = document.getElementById('skillgap-pct');
+    let current = 0;
+    const step = () => {
+        if (current <= finalPct) {
+            pctEl.textContent = current;
+            arc.style.strokeDashoffset = circumference - (circumference * current / 100);
+            current++;
+            requestAnimationFrame(step);
+        }
+    };
+    step();
+
+    // Update description
+    const desc = finalPct >= 80 ? 'Excellent match! Your career profile aligns strongly with this role.' :
+                 finalPct >= 60 ? 'Good match with room for improvement. Focus on the skills marked yellow.' :
+                 'Significant gaps found. Review the learning recommendations below.';
+    document.getElementById('skillgap-description').textContent = desc;
+
+    // Render tags
+    document.getElementById('sg-matched-list').innerHTML = matched.length
+        ? matched.map(s => `<span class="sg-tag matched">✓ ${esc(s)}</span>`).join('')
+        : '<span style="color:var(--text-muted)">No direct matches found</span>';
+
+    document.getElementById('sg-added-list').innerHTML = added.length
+        ? added.map(s => `<span class="sg-tag added">+ ${esc(s)}</span>`).join('')
+        : '<span style="color:var(--text-muted)">No skills were added</span>';
+
+    document.getElementById('sg-missing-list').innerHTML = missing.length
+        ? missing.map(s => `<span class="sg-tag missing">✗ ${esc(s)}</span>`).join('')
+        : '<span style="color:var(--accent-green)">All skills covered! 🎉</span>';
+
+    // Generate learning resources for added skills
+    const learningResources = document.getElementById('sg-learning-resources');
+    if (added.length > 0) {
+        const resources = added.slice(0, 8).map(skill => {
+            const suggestions = getLearningResource(skill);
+            return `<div class="sg-learning-item"><span class="learn-icon">📚</span><div><strong>${esc(skill)}</strong> — ${suggestions}</div></div>`;
+        });
+        learningResources.innerHTML = '<h4 style="margin-bottom:12px;font-size:0.9rem;font-weight:700">📖 Recommended Learning Path</h4>' + resources.join('');
+    } else {
+        learningResources.innerHTML = '';
+    }
+
+    document.getElementById('skillgap-results').style.display = 'flex';
+    toast('Skill gap analysis complete!');
+    if (finalPct >= 75) setTimeout(launchConfetti, 400);
+}
+
+function getLearningResource(skill) {
+    const resources = {
+        'python': 'Start with Python.org tutorial, then Automate the Boring Stuff. ~2-4 weeks.',
+        'java': 'Oracle Java Tutorials + Baeldung Spring guides. ~3-6 weeks.',
+        'javascript': 'MDN Web Docs + JavaScript.info for deep concepts. ~2-4 weeks.',
+        'typescript': 'TypeScript Handbook + build a small project. ~1-2 weeks if you know JS.',
+        'react': 'React.dev official tutorial + build a CRUD app. ~2-3 weeks.',
+        'angular': 'Angular.io Tour of Heroes + Angular University. ~3-4 weeks.',
+        'vue': 'Vue.js Guide + Vue Mastery. ~2-3 weeks.',
+        'node': 'Node.js Docs + build a REST API with Express. ~2-3 weeks.',
+        'docker': 'Docker Get Started guide + Dockerfile best practices. ~1-2 weeks.',
+        'kubernetes': 'Kubernetes.io tutorials + KodeKloud labs. ~3-6 weeks.',
+        'aws': 'AWS Skill Builder + Solutions Architect path. ~4-8 weeks for cert.',
+        'azure': 'Microsoft Learn AZ-900 path + hands-on labs. ~3-6 weeks.',
+        'gcp': 'Google Cloud Skills Boost + ACE cert path. ~4-6 weeks.',
+        'sql': 'SQLZoo + LeetCode SQL problems. ~1-2 weeks.',
+        'mongodb': 'MongoDB University free courses. ~1-2 weeks.',
+        'graphql': 'How to GraphQL tutorial + Apollo docs. ~1 week.',
+        'terraform': 'HashiCorp Learn + build infrastructure project. ~2-3 weeks.',
+        'machine learning': 'Andrew Ng ML course + Kaggle competitions. ~6-12 weeks.',
+        'deep learning': 'Fast.ai course + PyTorch tutorials. ~4-8 weeks.',
+        'ci/cd': 'GitHub Actions docs + set up a pipeline project. ~1 week.',
+        'microservices': 'Martin Fowler articles + build a sample system. ~3-4 weeks.',
+        'devops': 'DevOps Roadmap + Linux/Docker/K8s combo. ~4-8 weeks.',
+        'agile': 'Scrum Guide + Agile Manifesto. ~3-5 days.',
+        'rest': 'RESTful API design guide + build one with Express/FastAPI. ~1 week.',
+    };
+    const key = skill.toLowerCase();
+    for (const [k, v] of Object.entries(resources)) {
+        if (key.includes(k) || k.includes(key)) return v;
+    }
+    return `Search for "${skill}" on Coursera, Udemy, or YouTube. Start with beginner courses and build a small project.`;
+}
+
+// Sync vault JD with editor JD
+document.getElementById('vault-jd-input').addEventListener('input', () => {
+    document.getElementById('jd-input').value = document.getElementById('vault-jd-input').value;
 });
