@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResumeForge v3 — ATS-Optimized Resume Builder</title>
-    <meta name="description" content="Build ATS-optimized resumes with real-time scoring, keyword analysis, and Overleaf LaTeX export.">
+    <title>ResuForge Pro — AI Career Intelligence Platform</title>
+    <meta name="description" content="Upload your career folder, match skills to job requirements, get skill gap analysis, and generate tailored ATS-optimized resumes.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
@@ -28,13 +28,21 @@
                     <line x1="8" y1="19" x2="22" y2="19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
                     <line x1="8" y1="23" x2="18" y2="23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
                 </svg>
-                <span class="logo-text">Resume<span class="logo-highlight">Forge</span></span>
+                <span class="logo-text">Resu<span class="logo-highlight">Forge</span> <span class="logo-pro">Pro</span></span>
             </div>
         </div>
         <nav class="header-nav">
-            <button id="nav-editor" class="nav-btn active" data-view="editor">
+            <button id="nav-vault" class="nav-btn active" data-view="vault">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                Career Vault
+            </button>
+            <button id="nav-editor" class="nav-btn" data-view="editor">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
                 Editor
+            </button>
+            <button id="nav-skillgap" class="nav-btn" data-view="skillgap">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+                Skill Gap
             </button>
             <button id="nav-preview" class="nav-btn" data-view="preview">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
@@ -116,8 +124,60 @@
 
     <!-- Main Content -->
     <main id="main-content" class="main-content">
+        <!-- CAREER VAULT VIEW -->
+        <div id="view-vault" class="view active">
+            <div class="vault-layout">
+                <div class="vault-hero">
+                    <div class="vault-hero-content">
+                        <div class="vault-badge">✨ AI-Powered Career Intelligence</div>
+                        <h1 class="vault-title">Upload Your <span class="gradient-text">Career Vault</span></h1>
+                        <p class="vault-subtitle">Drop your career folder — resumes, certificates, project docs — and we'll extract your skills, experience, and qualifications automatically.</p>
+                    </div>
+                </div>
+                <div class="vault-content">
+                    <div class="vault-upload-section">
+                        <div id="drop-zone" class="drop-zone">
+                            <div class="drop-zone-icon">
+                                <svg viewBox="0 0 64 64" fill="none" width="64" height="64"><rect x="8" y="12" width="48" height="40" rx="6" stroke="currentColor" stroke-width="2.5" opacity="0.3"/><path d="M32 24v16M24 32h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M20 8h24l8 8" stroke="currentColor" stroke-width="2" opacity="0.2"/></svg>
+                            </div>
+                            <h3>Drop Career Files Here</h3>
+                            <p>or <button id="btn-browse-files" class="link-btn">browse files</button></p>
+                            <div class="drop-zone-formats">Supports: .txt, .md, .json, .pdf, .doc, .html</div>
+                            <input type="file" id="vault-file-input" multiple accept=".txt,.md,.json,.pdf,.doc,.docx,.html,.htm,.rtf,.csv" style="display:none">
+                        </div>
+                        <div id="vault-files-list" class="vault-files-list" style="display:none">
+                            <div class="vault-files-header">
+                                <h3>📁 Uploaded Files</h3>
+                                <button id="btn-clear-vault" class="btn btn-secondary btn-sm">Clear All</button>
+                            </div>
+                            <div id="vault-files-grid" class="vault-files-grid"></div>
+                        </div>
+                    </div>
+                    <div class="vault-jd-section">
+                        <div class="vault-jd-card">
+                            <h3 class="vault-jd-title">
+                                <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                                Target Job Description
+                            </h3>
+                            <textarea id="vault-jd-input" class="textarea-jd" placeholder="Paste the job description you're targeting...&#10;&#10;ResuForge Pro will analyze it and match your career data to generate the perfect tailored resume."></textarea>
+                            <button id="btn-forge-resume" class="btn btn-forge">⚡ Forge My Resume</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="vault-extracted" class="vault-extracted" style="display:none">
+                    <h3 class="vault-extracted-title">🧠 Extracted Career Intelligence</h3>
+                    <div class="vault-extracted-grid">
+                        <div class="extracted-card" id="extracted-skills"><h4>Skills Found</h4><div class="extracted-content"></div></div>
+                        <div class="extracted-card" id="extracted-experience"><h4>Experience</h4><div class="extracted-content"></div></div>
+                        <div class="extracted-card" id="extracted-education"><h4>Education</h4><div class="extracted-content"></div></div>
+                        <div class="extracted-card" id="extracted-projects"><h4>Projects</h4><div class="extracted-content"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- EDITOR VIEW -->
-        <div id="view-editor" class="view active">
+        <div id="view-editor" class="view">
             <div class="editor-layout">
                 <!-- Left: Job Description -->
                 <div class="panel panel-jd">
@@ -342,6 +402,43 @@
             </div>
         </div>
 
+        <!-- SKILL GAP VIEW -->
+        <div id="view-skillgap" class="view">
+            <div class="skillgap-dashboard">
+                <div class="skillgap-hero">
+                    <div class="skillgap-hero-left">
+                        <h2>Skill Gap Analysis</h2>
+                        <p id="skillgap-description">Upload career files and paste a job description, then forge your resume to see your skill gap analysis.</p>
+                        <button id="btn-run-skillgap" class="btn btn-primary btn-lg">🔍 Analyze Skill Gaps</button>
+                    </div>
+                    <div class="skillgap-donut-wrap">
+                        <svg class="skillgap-donut" viewBox="0 0 200 200">
+                            <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>
+                            <circle id="skillgap-arc" cx="100" cy="100" r="85" fill="none" stroke="url(#sgGradient)" stroke-width="14" stroke-linecap="round" stroke-dasharray="534" stroke-dashoffset="534" transform="rotate(-90 100 100)"/>
+                            <defs><linearGradient id="sgGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+                        </svg>
+                        <div class="skillgap-donut-value"><span id="skillgap-pct">0</span><span class="skillgap-donut-label">Match %</span></div>
+                    </div>
+                </div>
+                <div id="skillgap-results" class="skillgap-results" style="display:none">
+                    <div class="sg-section sg-have">
+                        <h3>✅ Skills You Have (Matched)</h3>
+                        <div id="sg-matched-list" class="sg-tags"></div>
+                    </div>
+                    <div class="sg-section sg-added">
+                        <h3>🟡 Skills Added to Resume (Learn These)</h3>
+                        <p class="sg-note">These skills were found in the job description and added to your resume. <strong>You should learn them</strong> to back up your application.</p>
+                        <div id="sg-added-list" class="sg-tags"></div>
+                        <div id="sg-learning-resources" class="sg-learning"></div>
+                    </div>
+                    <div class="sg-section sg-missing">
+                        <h3>❌ Skills Not Covered</h3>
+                        <div id="sg-missing-list" class="sg-tags"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- COVER LETTER VIEW -->
         <div id="view-coverletter" class="view">
             <div class="coverletter-layout">
@@ -473,8 +570,8 @@
     <!-- Footer -->
     <footer class="app-footer">
         <div class="footer-left">
-            <span class="footer-version">ResumeForge v3.0</span>
-            <span>ATS-Optimized Resume Builder</span>
+            <span class="footer-version">ResuForge Pro</span>
+            <span>AI Career Intelligence Platform</span>
         </div>
         <div class="footer-right">
             <span id="footer-last-saved">Not saved yet</span>
