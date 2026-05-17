@@ -869,6 +869,109 @@ body.focus-mode .ambient-orb { opacity: 0.06; }
 }
 .sg-learning-item .learn-icon { font-size: 1.2rem; flex-shrink: 0; }
 .sg-learning-item strong { color: var(--text-primary); }
+/* ===== VAULT PROCESSING OVERLAY ===== */
+.vault-processing {
+    text-align: center; padding: 48px 20px; margin: 24px 40px;
+    background: linear-gradient(145deg, rgba(99,102,241,0.06), rgba(236,72,153,0.04));
+    border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius-lg);
+    animation: fadeIn 0.4s ease;
+}
+.processing-spinner {
+    width: 56px; height: 56px; margin: 0 auto 20px; border-radius: 50%;
+    border: 3px solid rgba(99,102,241,0.15); border-top-color: var(--accent-2);
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.vault-processing h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+.vault-processing p { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 20px; }
+.processing-bar {
+    width: 280px; height: 6px; margin: 0 auto; border-radius: 3px;
+    background: rgba(255,255,255,0.06); overflow: hidden;
+}
+.processing-fill {
+    height: 100%; width: 0%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-3), var(--accent-pink));
+    background-size: 200% 100%; transition: width 0.5s ease;
+    animation: processingShimmer 1.5s ease-in-out infinite;
+}
+@keyframes processingShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+/* ===== VAULT STATS DASHBOARD ===== */
+.vault-stats {
+    display: flex; justify-content: center; gap: 32px; padding: 20px 40px; margin: 0 auto;
+    max-width: 800px; animation: itemIn 0.5s ease;
+}
+.vault-stat {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 16px 28px; border-radius: var(--radius);
+    background: var(--bg-card); border: 1px solid var(--border);
+    backdrop-filter: blur(10px); min-width: 100px; transition: var(--transition);
+}
+.vault-stat:hover { border-color: rgba(99,102,241,0.2); transform: translateY(-2px); }
+.vault-stat-value {
+    font-size: 1.8rem; font-weight: 800; font-family: var(--font-mono);
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.vault-stat-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+/* ===== SKELETON LOADING ===== */
+.skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 200% 100%; animation: skeletonShimmer 1.5s ease-in-out infinite;
+    border-radius: 6px;
+}
+@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ===== PAGE VIEW TRANSITIONS ===== */
+.view { animation: viewIn 0.35s ease; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== ACCESSIBILITY FOCUS RING ===== */
+*:focus-visible {
+    outline: 2px solid var(--accent-2); outline-offset: 2px;
+    border-radius: 4px;
+}
+.nav-btn:focus-visible { outline-offset: -2px; }
+
+/* ===== SMOOTH SCROLLBAR EVERYWHERE ===== */
+* { scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.2) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.2); border-radius: 10px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.35); }
+
+/* ===== ENHANCED HOVER CARDS ===== */
+.extracted-card, .ats-card, .sg-section, .vault-stat {
+    position: relative; overflow: hidden;
+}
+.extracted-card::before, .ats-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
+    opacity: 0; transition: opacity 0.3s ease;
+}
+.extracted-card:hover::before, .ats-card:hover::before { opacity: 1; }
+
+/* ===== PULSE DOT FOR LIVE INDICATORS ===== */
+.live-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-green); margin-right: 6px;
+    animation: livePulse 1.5s ease-in-out infinite;
+}
+@keyframes livePulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(16,185,129,0); } }
+
+/* ===== INSTALL PWA BANNER ===== */
+.pwa-banner {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 16px; padding: 14px 24px;
+    background: rgba(18,18,30,0.95); border: 1px solid rgba(99,102,241,0.25);
+    border-radius: var(--radius); backdrop-filter: blur(20px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5); z-index: 9000;
+    animation: slideUp 0.5s ease; font-size: 0.88rem;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.pwa-banner button { white-space: nowrap; }
+.pwa-banner .pwa-dismiss { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; padding: 4px; }
 
 /* ===== RESPONSIVE ADDITIONS ===== */
 @media (max-width: 900px) {
@@ -880,4 +983,19 @@ body.focus-mode .ambient-orb { opacity: 0.06; }
     .vault-extracted-grid { grid-template-columns: 1fr 1fr; }
     .vault-title { font-size: 1.6rem; }
     .skillgap-hero { flex-direction: column; text-align: center; }
+    .vault-stats { gap: 12px; flex-wrap: wrap; padding: 16px 20px; }
+    .vault-stat { padding: 12px 18px; min-width: 70px; }
+    .vault-stat-value { font-size: 1.3rem; }
+    .header-nav { overflow-x: auto; max-width: 50vw; }
+    .nav-btn span { display: none; }
+    .pwa-banner { left: 16px; right: 16px; transform: none; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+}
+@media (max-width: 600px) {
+    .vault-hero { padding: 28px 16px 20px; }
+    .vault-content { padding: 0 16px; gap: 16px; }
+    .vault-extracted { padding: 16px; }
+    .vault-extracted-grid { grid-template-columns: 1fr; }
+    .ats-dashboard { padding: 20px 16px; }
+    .skillgap-dashboard { padding: 20px 16px; }
 }
