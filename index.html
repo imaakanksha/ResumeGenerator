@@ -185,14 +185,29 @@
                             <button id="btn-forge-resume" class="btn btn-forge">⚡ Forge My Resume</button>
                         </div>
                     </div>
+                <!-- Vault Processing Overlay -->
+                <div id="vault-processing" class="vault-processing" style="display:none">
+                    <div class="processing-spinner"></div>
+                    <h3>Forging Your Resume...</h3>
+                    <p id="processing-status">Analyzing career data & matching skills</p>
+                    <div class="processing-bar"><div id="processing-fill" class="processing-fill"></div></div>
+                </div>
+                <!-- Vault Stats Dashboard -->
+                <div id="vault-stats" class="vault-stats" style="display:none">
+                    <div class="vault-stat"><span class="vault-stat-value" id="vs-files">0</span><span class="vault-stat-label">Files</span></div>
+                    <div class="vault-stat"><span class="vault-stat-value" id="vs-skills">0</span><span class="vault-stat-label">Skills</span></div>
+                    <div class="vault-stat"><span class="vault-stat-value" id="vs-exp">0</span><span class="vault-stat-label">Experience</span></div>
+                    <div class="vault-stat"><span class="vault-stat-value" id="vs-words">0</span><span class="vault-stat-label">Words</span></div>
                 </div>
                 <div id="vault-extracted" class="vault-extracted" style="display:none">
                     <h3 class="vault-extracted-title">🧠 Extracted Career Intelligence</h3>
                     <div class="vault-extracted-grid">
-                        <div class="extracted-card" id="extracted-skills"><h4>Skills Found</h4><div class="extracted-content"></div></div>
-                        <div class="extracted-card" id="extracted-experience"><h4>Experience</h4><div class="extracted-content"></div></div>
-                        <div class="extracted-card" id="extracted-education"><h4>Education</h4><div class="extracted-content"></div></div>
-                        <div class="extracted-card" id="extracted-projects"><h4>Projects</h4><div class="extracted-content"></div></div>
+                        <div class="extracted-card" id="extracted-skills"><h4>⚡ Skills Found</h4><div class="extracted-content"></div></div>
+                        <div class="extracted-card" id="extracted-experience"><h4>💼 Experience</h4><div class="extracted-content"></div></div>
+                        <div class="extracted-card" id="extracted-education"><h4>🎓 Education</h4><div class="extracted-content"></div></div>
+                        <div class="extracted-card" id="extracted-projects"><h4>🚀 Projects</h4><div class="extracted-content"></div></div>
+                    </div>
+                </div>
                     </div>
                 </div>
             </div>
